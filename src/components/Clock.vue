@@ -1,5 +1,5 @@
 <template>
-  <div class="flex items-center">
+  <div class="flex justify-center">
     <span class="text-5xl">{{ formatTime }}</span>
   </div>
 </template>
