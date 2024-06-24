@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 import {
   DEFAULT_RESTS,
-  DEFAULT_TIMES,
+  DEFAULT_TOTAL_LOOPS,
   DEFAULT_TOMATOES,
   GET_VALUE,
   SAVE_VALUE,
@@ -65,7 +65,7 @@ function init() {
   setCookie({
     tomatoes: DEFAULT_TOMATOES,
     rests: DEFAULT_RESTS,
-    times: DEFAULT_TIMES,
+    totalLoops: DEFAULT_TOTAL_LOOPS,
   });
 }
 
@@ -104,6 +104,9 @@ app.on("activate", () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
   }
+});
+app.on("before-quit", (event) => {
+  console.log("before-quit");
 });
 
 app.whenReady().then(() => {

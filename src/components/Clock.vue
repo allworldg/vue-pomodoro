@@ -11,7 +11,9 @@ const props = defineProps<{ remainSeconds: number }>();
 const formatTime = computed(() => {
   const minutes = Math.trunc(props.remainSeconds / 60);
   const seconds = Math.trunc(props.remainSeconds % 60);
-  return `${minutes}:${seconds}`;
+  return `${minutes >= 10 ? minutes : "0" + minutes}:${
+    seconds >= 10 ? seconds : "0" + seconds
+  }`;
 });
 </script>
 

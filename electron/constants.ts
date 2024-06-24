@@ -3,4 +3,4 @@ export const GET_VALUE = "getValue";
 
 export const DEFAULT_TOMATOES = "5";
 export const DEFAULT_RESTS = "0";
-export const DEFAULT_TIMES = "1";
+export const DEFAULT_TOTAL_LOOPS = "1";
