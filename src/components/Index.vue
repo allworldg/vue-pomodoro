@@ -83,15 +83,12 @@ function start(): void {
       return;
     }
     if (mState === MessageState.STOP) {
-      console.log("stop message get");
-      console.log("hasrest: " + hasRest.value);
-      console.log("curLoop: " + curLoop.value);
       if (state.value === State.TOMATOE) {
         if (hasRest.value === true) {
           state.value = State.REST;
           customPostMessage({
             state: MessageState.START,
-            data: { targetTime: parseInt(rest.value + Date.now()) },
+            data: { targetTime: parseInt(rest.value) * MINUTE + Date.now() },
           });
         } else if (curLoop.value === parseInt(totalLoops.value)) {
           stop();
@@ -101,6 +98,19 @@ function start(): void {
             data: { targetTime: parseInt(tomato.value) * MINUTE + Date.now() },
           });
           curLoop.value++;
+        }
+        return;
+      }
+      if (state.value === State.REST) {
+        if (curLoop.value === parseInt(totalLoops.value)) {
+          stop();
+        } else {
+          state.value = State.TOMATOE;
+          curLoop.value++;
+          customPostMessage({
+            state: MessageState.START,
+            data: { targetTime: parseInt(tomato.value) * MINUTE + Date.now() },
+          });
         }
       }
     }
@@ -145,7 +155,7 @@ function customPostMessage(message: MessageData) {
       <StateTitle
         v-show="state !== State.STOP"
         class="mt-2"
-        :state="State.TOMATOE"
+        :state="state"
       ></StateTitle>
       <div class="flex flex-row mt-5">
         <div class="flex-1"></div>
