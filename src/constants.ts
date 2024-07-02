@@ -12,6 +12,13 @@ export enum MessageState {
   END = "3",
   REMAIN_TEN_SECONDS = "4",
 }
+
+export enum NotificationMessage {
+  WORK = "开始工作",
+  REST = "开始休息",
+  END = "结束",
+}
+
 export const DEFAULT_TOMATOES = "5";
 export const DEFAULT_RESTS = "0";
 export const DEFAULT_LOOPS = "1";
@@ -23,7 +30,6 @@ export const RESTING = "正在休息";
 export const SECOND = 1000;
 export const MINUTE = 60 * SECOND;
 
-export const NOTIFICATION_TITLE = "番茄通知：通知 ";
 export const NOTIFICATION_BODY_START_WORK = "开始专注";
 export const NOTIFICATION_BODY_START_REST = "开始休息";
 export const NOTIFICATION_BODY_END = "全部结束";

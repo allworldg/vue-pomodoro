@@ -1,5 +1,10 @@
-import { ipcRenderer, contextBridge } from "electron";
-import { GET_VALUE, SAVE_VALUE } from "./constants";
+import { ipcRenderer, contextBridge, ipcMain } from "electron";
+import {
+  ADD_LOCAL_MUISC,
+  GET_VALUE,
+  NOTIFICATION,
+  SAVE_VALUE,
+} from "./constants";
 import { StorageValue } from "../types/type";
 
 // --------- Expose some API to the Renderer process ---------
@@ -27,8 +32,12 @@ contextBridge.exposeInMainWorld("myIpcRenderer", {
     return ipcRenderer.send(SAVE_VALUE, value);
   },
   getLocalValue() {
-    return ipcRenderer.invoke(GET_VALUE).then((cookie) => {
-      return cookie;
-    });
+    return ipcRenderer.invoke(GET_VALUE).then((cookie) => cookie);
+  },
+  notification(value: string) {
+    ipcRenderer.send(NOTIFICATION, value);
+  },
+  addLocalMusic() {
+    return ipcRenderer.invoke(ADD_LOCAL_MUISC).then((value) => value);
   },
 });

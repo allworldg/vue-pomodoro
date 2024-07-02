@@ -1,4 +1,11 @@
-import { app, BrowserWindow, ipcMain, session } from "electron";
+import {
+  app,
+  BrowserWindow,
+  dialog,
+  ipcMain,
+  Notification,
+  session,
+} from "electron";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
@@ -8,6 +15,9 @@ import {
   DEFAULT_TOMATOES,
   GET_VALUE,
   SAVE_VALUE,
+  NOTIFICATION,
+  NOTIFICATION_TITLE,
+  ADD_LOCAL_MUISC,
 } from "./constants";
 import { StorageValue } from "../types/type";
 
@@ -83,7 +93,7 @@ function setCookie(obj: StorageValue) {
 }
 
 function getCookie() {
-  return session.defaultSession.cookies.get({ url: URL }).then((cookie) => {
+  return session.defaultSession.cookies.get({ url: URL,name:NAME }).then((cookie) => {
     return cookie;
   });
 }
@@ -105,7 +115,7 @@ app.on("activate", () => {
     createWindow();
   }
 });
-app.on("before-quit", (event) => {
+app.on("before-quit", (_event) => {
   console.log("before-quit");
 });
 
@@ -126,5 +136,12 @@ app.whenReady().then(() => {
       cookie = await getCookie();
     }
     return cookie;
+  });
+  ipcMain.on(NOTIFICATION, (_e, message) => {
+    new Notification({ title: NOTIFICATION_TITLE, body: message }).show();
+  });
+  ipcMain.handle(ADD_LOCAL_MUISC, async () => {
+    let file = await dialog.showOpenDialog({});
+    console.log(file);
   });
 });

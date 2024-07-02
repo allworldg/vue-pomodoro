@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, onMounted, ref } from "vue";
+import { inject, onMounted, ref, toValue } from "vue";
 import Clock from "@/components/Clock.vue";
 import InputItem from "@/components/InputItem.vue";
 import StateTitle from "@/components/StateTitle.vue";
@@ -12,13 +12,15 @@ import {
   MINUTE,
   DEFAULT_CURRENT_LOOP,
   SECOND,
+  NotificationMessage,
 } from "@/constants";
 import {
   asyncGetStorageValue,
   asyncSetStorageValue,
 } from "@/utils/localStorage";
 import { checkInRange } from "@/utils/util";
-import { ContextValue, MessageData, StorageValue } from "@/../types/type";
+import { MessageData, MusicItem, StorageValue } from "@/../types/type";
+import LoopTitle from "@/components/LoopTitle.vue";
 const remainSeconds = ref<number>(0);
 const audio = new Audio();
 const tomato = ref<string>(DEFAULT_TOMATOES);
@@ -26,22 +28,19 @@ const rest = ref<string>(DEFAULT_RESTS);
 const totalLoops = ref<string>(DEFAULT_LOOPS);
 const state = ref<State>(State.STOP);
 const curLoop = ref<number>(DEFAULT_CURRENT_LOOP);
-
+const curMusicPath = ref<string>("");
+const musicList = ref<Array<MusicItem>>([
+  { name: "无", path: "" },
+  {
+    name: "forest",
+    path: new URL("../../public/forest.mp4", import.meta.url).toString(),
+  },
+]);
 const hasRest = ref<boolean>(false);
+
 const worker = new Worker(new URL("../worker.ts", import.meta.url), {
   type: "module",
 });
-// const { hasRest, updateHasRest, isMusicPlaying, updateIsMusicPlaying } =
-//   inject<ContextValue>(CONTEXY_KEY, {
-//     hasRest: ref<boolean>(true),
-//     updateHasRest: (_value: boolean) => {
-//       console.error("cannot inject from contextValue");
-//     },
-//     isMusicPlaying: ref(false),
-//     updateIsMusicPlaying: (_value: boolean) => {
-//       console.error("cannot inject from contextValue");
-//     },
-//   });
 onMounted(() => {
   init();
 });
@@ -70,7 +69,7 @@ function start(): void {
   state.value = State.TOMATOE;
   customPostMessage({
     state: MessageState.START,
-    data: { targetTime: parseInt(tomato.value) * MINUTE + Date.now() },
+    data: { targetTime: parseInt(tomato.value) * SECOND + Date.now() },
   });
   worker.onmessage = (e: MessageEvent<MessageData>) => {
     const message = e.data;
@@ -88,28 +87,33 @@ function start(): void {
           state.value = State.REST;
           customPostMessage({
             state: MessageState.START,
-            data: { targetTime: parseInt(rest.value) * MINUTE + Date.now() },
+            data: { targetTime: parseInt(rest.value) * SECOND + Date.now() },
           });
+          notification(NotificationMessage.REST);
         } else if (curLoop.value === parseInt(totalLoops.value)) {
+          notification(NotificationMessage.END);
           stop();
         } else {
           customPostMessage({
             state: MessageState.START,
-            data: { targetTime: parseInt(tomato.value) * MINUTE + Date.now() },
+            data: { targetTime: parseInt(tomato.value) * SECOND + Date.now() },
           });
+          notification(NotificationMessage.WORK);
           curLoop.value++;
         }
         return;
       }
       if (state.value === State.REST) {
         if (curLoop.value === parseInt(totalLoops.value)) {
+          notification(NotificationMessage.END);
           stop();
         } else {
           state.value = State.TOMATOE;
           curLoop.value++;
+          notification(NotificationMessage.WORK);
           customPostMessage({
             state: MessageState.START,
-            data: { targetTime: parseInt(tomato.value) * MINUTE + Date.now() },
+            data: { targetTime: parseInt(tomato.value) * SECOND + Date.now() },
           });
         }
       }
@@ -123,7 +127,21 @@ function stop(): void {
   audio.pause();
   audio.currentTime = 0;
 }
-function playMusic(): void {}
+function playMusic(): void {
+  if (curMusicPath.value === "") {
+    return;
+  }
+  audio.src = curMusicPath.value;
+  audio.play();
+  audio.onerror = (e) => {
+    console.log(`audio get error:`, e);
+    audio.pause();
+    audio.currentTime = 0;
+  };
+}
+function clearMusic() {
+  console.log("do clear");
+}
 async function validateAndStore(): Promise<void> {
   if (
     checkInRange(tomato.value, 1, 9999) &&
@@ -140,10 +158,19 @@ async function validateAndStore(): Promise<void> {
   }
 }
 function customPostMessage(message: MessageData) {
-  if (worker != null) {
-    worker.postMessage(message);
-  } else {
-    console.error("worker is null");
+  worker.postMessage(message);
+}
+function notification(message: NotificationMessage) {
+  window.myIpcRenderer.notification(message);
+}
+function handleSelectMusic(event: Event) {
+  const optionList = event.target as HTMLSelectElement;
+  const size = optionList.length;
+  const index = optionList.selectedIndex;
+  if (index === size - 1) {
+    clearMusic();
+    curMusicPath.value = "";
+    return;
   }
 }
 </script>
@@ -157,6 +184,11 @@ function customPostMessage(message: MessageData) {
         class="mt-2"
         :state="state"
       ></StateTitle>
+      <LoopTitle
+        v-show="state !== State.STOP"
+        :cur-loop="curLoop"
+        :total-loops="totalLoops"
+      ></LoopTitle>
       <div class="flex flex-row mt-5">
         <div class="flex-1"></div>
         <div class="flex-1 flex flex-row justify-center">
@@ -200,16 +232,11 @@ function customPostMessage(message: MessageData) {
             ></path>
           </svg>
         </div>
-        <div class="flex-1">
-          <select>
-            <option>test1</option>
-            <option>test2</option>
-          </select>
-        </div>
+        <div class="flex-1"></div>
       </div>
     </div>
     <div class="flex flex-1 flex-col">
-      <div class="flex-1 flex flex-wrap justify-center content-start">
+      <div class="flex-1 flex justify-center flex-wrap">
         <InputItem
           class="mx-2"
           title="番茄"
@@ -227,10 +254,36 @@ function customPostMessage(message: MessageData) {
         <InputItem
           class="mx-2"
           title="循环"
-          unit="次"
+          unit="次&nbsp;&nbsp;&nbsp;"
           :value="totalLoops"
           @update="(value:string)=>{totalLoops = value;validateAndStore()}"
         ></InputItem>
+      </div>
+      <div class="flex justify-center grow" >
+        <div>
+          <a
+            class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
+            href="#/"
+            @click="() => {}"
+            >添加本地音乐</a
+          >
+        </div>
+        <div class="">
+          <select
+            v-model="curMusicPath"
+            @change="handleSelectMusic"
+            class="max-w-32 text-ellipsis overflow-hidden border-2 border-black"
+          >
+            <option
+              v-for="item in musicList"
+              :key="item.path!"
+              :value="item.path"
+            >
+              {{ item.name }}
+            </option>
+            <option value="clear">清除音乐</option>
+          </select>
+        </div>
       </div>
     </div>
   </div>
