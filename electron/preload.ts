@@ -12,7 +12,7 @@ import {
 import { ImyIpcRenderer, LocalInputValue } from "../types/type";
 
 const myIpcRenderer: ImyIpcRenderer = {
-  saveInputValue(value: LocalInputValue) {
+  saveInputValue(value: string) {
     return ipcRenderer.send(SAVE_INPUT_VALUE, value);
   },
   getInputValue() {
@@ -21,7 +21,7 @@ const myIpcRenderer: ImyIpcRenderer = {
   notification(value: string) {
     ipcRenderer.send(NOTIFICATION, value);
   },
-  saveMusicValue(value: LocalMusicValue) {
+  saveMusicValue(value: string) {
     ipcRenderer.send(SAVE_MUISC_LIST, value);
   },
   getMusicValue() {

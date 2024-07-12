@@ -15,13 +15,13 @@ export interface LocalMusicValue {
   musicList: Array<MusicItem>;
 }
 export interface ImyIpcRenderer {
-  saveInputValue: (value: LocalInputValue) => void;
-  getInputValue: () => Promise<LocalInputValue>;
-  notification: (value: NotificationMessage) => void;
-  saveMusicValue: (value: LocalMusicValue) => void;
-  clearMusicValue: () => Promise<LocalMusicValue>;
-  getMusicValue: () => Promise<LocalMusicValue>;
-  addLocalMusic: () => Promise<MusicItem>;
+  saveInputValue: (value: string) => void;
+  getInputValue: () => Promise<string>;
+  notification: (value: string) => void;
+  saveMusicValue: (value: string) => void;
+  clearMusicValue: () => Promise<string>;
+  getMusicValue: () => Promise<string>;
+  addLocalMusic: () => Promise<string>;
 }
 
 export interface ContextValue {

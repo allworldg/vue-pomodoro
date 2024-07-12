@@ -84,22 +84,24 @@ function createWindow() {
 }
 
 function init() {
-  setCookie(CookieName.INPUT_VALUE, {
-    tomatoes: DEFAULT_TOMATOES,
-    rests: DEFAULT_RESTS,
-    totalLoops: DEFAULT_TOTAL_LOOPS,
-  });
-  console.log(new URL("./public/forest.mp4", import.meta.url).toString());
-  setCookie(CookieName.MUISC_VALUE, DEFAULT_MUSIC_VALUE);
+  setCookie(
+    CookieName.INPUT_VALUE,
+    JSON.stringify({
+      tomatoes: DEFAULT_TOMATOES,
+      rests: DEFAULT_RESTS,
+      totalLoops: DEFAULT_TOTAL_LOOPS,
+    })
+  );
+  setCookie(CookieName.MUISC_VALUE, JSON.stringify(DEFAULT_MUSIC_VALUE));
 }
 
-function setCookie(cookieName: CookieName, obj: Object) {
+function setCookie(cookieName: CookieName, value: string) {
   session.defaultSession.cookies
     .set({
       url: CookieUrl,
       name: cookieName,
       expirationDate: EXPIRE_TIME + Date.now(),
-      value: JSON.stringify(obj),
+      value: value,
     })
     .catch((e) => {
       console.error(`${cookieName}: set cookie error`);
@@ -108,11 +110,7 @@ function setCookie(cookieName: CookieName, obj: Object) {
 }
 
 function getCookie(name: CookieName) {
-  return session.defaultSession.cookies
-    .get({ url: CookieUrl, name: name })
-    .then((cookie) => {
-      return cookie;
-    });
+  return session.defaultSession.cookies.get({ url: CookieUrl, name: name });
 }
 
 // Quit when all windows are closed, except on macOS. There, it's common
@@ -155,7 +153,7 @@ app.whenReady().then(() => {
       init();
       cookie = await getCookie(CookieName.MUISC_VALUE);
     }
-    return JSON.parse(cookie[0].value);
+    return cookie[0].value;
   });
   ipcMain.handle(GET_INPUT_VALUE, async () => {
     let cookie = await getCookie(CookieName.INPUT_VALUE);
@@ -163,11 +161,12 @@ app.whenReady().then(() => {
       init();
       cookie = await getCookie(CookieName.INPUT_VALUE);
     }
-    return JSON.parse(cookie[0].value);
+    return cookie[0].value;
   });
   ipcMain.handle(CLEAR_MUSIC_VALUE, async () => {
-    setCookie(CookieName.MUISC_VALUE, DEFAULT_MUSIC_VALUE);
-    return DEFAULT_MUSIC_VALUE;
+    const result = JSON.stringify(DEFAULT_MUSIC_VALUE);
+    setCookie(CookieName.MUISC_VALUE, result);
+    return result;
   });
   ipcMain.on(NOTIFICATION, (_e, message) => {
     new Notification({ title: NOTIFICATION_TITLE, body: message }).show();
@@ -183,10 +182,10 @@ app.whenReady().then(() => {
       ],
     });
     if (!file.canceled) {
-      return {
+      return JSON.stringify({
         name: path.basename(file.filePaths[0]),
         path: file.filePaths[0],
-      };
+      });
     }
     return null;
   });

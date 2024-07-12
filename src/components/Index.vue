@@ -16,14 +16,19 @@ import {
   NotificationMessage,
 } from "@/constants";
 import {
+  asyncAddLocalMusicValue,
   asyncGetLocalInputValue,
-  asyncGetLocalMusicList,
+  asyncGetLocalMusicValue,
   asyncSetLocalInputValue,
+  asyncSetLocalMusicValue,
+  clearMusicValue,
 } from "@/utils/localStorage";
 import { checkInRange } from "@/utils/util";
-import { MessageData, MusicItem } from "@/../types/type";
+import {
+  MessageData,
+  MusicItem,
+} from "@/../types/type";
 import LoopTitle from "@/components/LoopTitle.vue";
-import { json } from "stream/consumers";
 const remainSeconds = ref<number>(0);
 const audio = new Audio();
 const tomato = ref<string>(DEFAULT_TOMATOES);
@@ -45,7 +50,7 @@ async function init(): Promise<void> {
     rest.value = res.rests;
     totalLoops.value = res.totalLoops;
   });
-  asyncGetLocalMusicList().then((res) => {
+  asyncGetLocalMusicValue().then((res) => {
     musicList.value = res.musicList;
     curMusicPath.value = res.curMusicPath;
   });
@@ -154,27 +159,27 @@ function handleSelectMusic(event: Event) {
   const size = optionList.length;
   const index = optionList.selectedIndex;
   if (index === size - 1) {
-    window.myIpcRenderer.clearMusicValue().then((res) => {
+    clearMusicValue().then((res) => {
       curMusicPath.value = res.curMusicPath;
       musicList.value = res.musicList;
     });
   }
-  window.myIpcRenderer.saveMusicValue({
+  asyncSetLocalMusicValue({
     curMusicPath: curMusicPath.value,
     musicList: musicList.value,
   });
 }
 function handleAddLocalMusic() {
-  window.myIpcRenderer.addLocalMusic().then((value) => {
+  asyncAddLocalMusicValue().then((value) => {
     if (value !== null) {
       if (value.name.length >= 11) {
         value.name = `...${value.name?.slice(-11)}`;
       }
       musicList.value.push(value);
       curMusicPath.value = value.path;
-      window.myIpcRenderer.saveMusicValue({
-        musicList: toRaw(musicList.value),
-        curMusicPath: "",
+      asyncSetLocalMusicValue({
+        musicList: musicList.value,
+        curMusicPath: curMusicPath.value,
       });
     }
   });
