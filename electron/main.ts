@@ -13,21 +13,32 @@ import {
   DEFAULT_RESTS,
   DEFAULT_TOTAL_LOOPS,
   DEFAULT_TOMATOES,
-  GET_VALUE,
-  SAVE_VALUE,
+  GET_INPUT_VALUE,
+  SAVE_INPUT_VALUE,
   NOTIFICATION,
   NOTIFICATION_TITLE,
   ADD_LOCAL_MUISC,
+  CookieName,
+  SAVE_MUISC_LIST,
+  GET_MUISC_VALUE,
+  CLEAR_MUSIC_VALUE,
 } from "./constants";
-import { StorageValue } from "../types/type";
-
-const URL = "http://localhost/pomodoro";
+import { MusicItem, LocalInputValue, LocalMusicValue } from "../types/type";
+const CookieUrl = "http://localhost/pomodoro";
 const NAME = "pomodoro";
 const EXPIRE_TIME = 365 * 24 * 3600 * 1000;
-
 const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
+const DEFAULT_MUSIC_VALUE: LocalMusicValue = {
+  curMusicPath: "",
+  musicList: [
+    { name: "无", path: "" },
+    {
+      name: "forest",
+      path: new URL("./public/forest.mp4", import.meta.url).toString(),
+    },
+  ],
+};
 // The built directory structure
 //
 // ├─┬─┬ dist
@@ -55,6 +66,7 @@ function createWindow() {
     icon: path.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
     webPreferences: {
       preload: path.join(__dirname, "preload.mjs"),
+      webSecurity: false,
     },
   });
 
@@ -72,30 +84,35 @@ function createWindow() {
 }
 
 function init() {
-  setCookie({
+  setCookie(CookieName.INPUT_VALUE, {
     tomatoes: DEFAULT_TOMATOES,
     rests: DEFAULT_RESTS,
     totalLoops: DEFAULT_TOTAL_LOOPS,
   });
+  console.log(new URL("./public/forest.mp4", import.meta.url).toString());
+  setCookie(CookieName.MUISC_VALUE, DEFAULT_MUSIC_VALUE);
 }
 
-function setCookie(obj: StorageValue) {
+function setCookie(cookieName: CookieName, obj: Object) {
   session.defaultSession.cookies
     .set({
-      url: URL,
-      name: NAME,
+      url: CookieUrl,
+      name: cookieName,
       expirationDate: EXPIRE_TIME + Date.now(),
       value: JSON.stringify(obj),
     })
-    .then(() => {
-      console.log("cookies are settled");
+    .catch((e) => {
+      console.error(`${cookieName}: set cookie error`);
+      console.error(e);
     });
 }
 
-function getCookie() {
-  return session.defaultSession.cookies.get({ url: URL,name:NAME }).then((cookie) => {
-    return cookie;
-  });
+function getCookie(name: CookieName) {
+  return session.defaultSession.cookies
+    .get({ url: CookieUrl, name: name })
+    .then((cookie) => {
+      return cookie;
+    });
 }
 
 // Quit when all windows are closed, except on macOS. There, it's common
@@ -121,27 +138,56 @@ app.on("before-quit", (_event) => {
 
 app.whenReady().then(() => {
   createWindow();
-  getCookie().then((res) => {
+  getCookie(CookieName.INPUT_VALUE).then((res) => {
     if (res.length == 0) {
       init();
     }
   });
-  ipcMain.on(SAVE_VALUE, (_event, cookie) => {
-    setCookie(cookie);
+  ipcMain.on(SAVE_INPUT_VALUE, (_event, cookie) => {
+    setCookie(CookieName.INPUT_VALUE, cookie);
   });
-  ipcMain.handle(GET_VALUE, async () => {
-    let cookie = await getCookie();
+  ipcMain.on(SAVE_MUISC_LIST, (_event, cookie) => {
+    setCookie(CookieName.MUISC_VALUE, cookie);
+  });
+  ipcMain.handle(GET_MUISC_VALUE, async () => {
+    let cookie = await getCookie(CookieName.MUISC_VALUE);
     if (cookie.length == 0) {
       init();
-      cookie = await getCookie();
+      cookie = await getCookie(CookieName.MUISC_VALUE);
     }
-    return cookie;
+    return JSON.parse(cookie[0].value);
+  });
+  ipcMain.handle(GET_INPUT_VALUE, async () => {
+    let cookie = await getCookie(CookieName.INPUT_VALUE);
+    if (cookie.length == 0) {
+      init();
+      cookie = await getCookie(CookieName.INPUT_VALUE);
+    }
+    return JSON.parse(cookie[0].value);
+  });
+  ipcMain.handle(CLEAR_MUSIC_VALUE, async () => {
+    setCookie(CookieName.MUISC_VALUE, DEFAULT_MUSIC_VALUE);
+    return DEFAULT_MUSIC_VALUE;
   });
   ipcMain.on(NOTIFICATION, (_e, message) => {
     new Notification({ title: NOTIFICATION_TITLE, body: message }).show();
   });
   ipcMain.handle(ADD_LOCAL_MUISC, async () => {
-    let file = await dialog.showOpenDialog({});
-    console.log(file);
+    let file = await dialog.showOpenDialog({
+      filters: [
+        {
+          name: "Videos",
+          extensions: ["wav", "ogg", "mp4", "aac", "m4a", "webm"],
+        },
+        { name: "All Files", extensions: ["*"] },
+      ],
+    });
+    if (!file.canceled) {
+      return {
+        name: path.basename(file.filePaths[0]),
+        path: file.filePaths[0],
+      };
+    }
+    return null;
   });
 });

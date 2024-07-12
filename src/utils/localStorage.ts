@@ -1,8 +1,11 @@
-import { StorageValue } from "../../types/type";
+import { LocalInputValue, LocalMusicValue, MusicItem } from "../../types/type";
 
-export async function asyncGetStorageValue(): Promise<Electron.Cookie[]> {
-  return window.myIpcRenderer.getLocalValue();
+export async function asyncGetLocalInputValue(): Promise<LocalInputValue> {
+  return window.myIpcRenderer.getInputValue();
 }
-export async function asyncSetStorageValue(value: StorageValue) {
-  return window.myIpcRenderer.saveLocalValue(value);
+export async function asyncSetLocalInputValue(value: LocalInputValue) {
+  return window.myIpcRenderer.saveInputValue(value);
+}
+export async function asyncGetLocalMusicList(): Promise<LocalMusicValue> {
+  return window.myIpcRenderer.getMusicValue();
 }

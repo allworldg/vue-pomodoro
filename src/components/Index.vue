@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { inject, onMounted, ref, toValue } from "vue";
+import { inject, onMounted, ref, toRaw, toValue } from "vue";
 import Clock from "@/components/Clock.vue";
 import InputItem from "@/components/InputItem.vue";
 import StateTitle from "@/components/StateTitle.vue";
+import Worker from "@/worker.ts?worker";
 import {
   DEFAULT_RESTS,
   DEFAULT_LOOPS,
@@ -15,12 +16,14 @@ import {
   NotificationMessage,
 } from "@/constants";
 import {
-  asyncGetStorageValue,
-  asyncSetStorageValue,
+  asyncGetLocalInputValue,
+  asyncGetLocalMusicList,
+  asyncSetLocalInputValue,
 } from "@/utils/localStorage";
 import { checkInRange } from "@/utils/util";
-import { MessageData, MusicItem, StorageValue } from "@/../types/type";
+import { MessageData, MusicItem } from "@/../types/type";
 import LoopTitle from "@/components/LoopTitle.vue";
+import { json } from "stream/consumers";
 const remainSeconds = ref<number>(0);
 const audio = new Audio();
 const tomato = ref<string>(DEFAULT_TOMATOES);
@@ -29,47 +32,31 @@ const totalLoops = ref<string>(DEFAULT_LOOPS);
 const state = ref<State>(State.STOP);
 const curLoop = ref<number>(DEFAULT_CURRENT_LOOP);
 const curMusicPath = ref<string>("");
-const musicList = ref<Array<MusicItem>>([
-  { name: "无", path: "" },
-  {
-    name: "forest",
-    path: new URL("../../public/forest.mp4", import.meta.url).toString(),
-  },
-]);
+const musicList = ref<Array<MusicItem>>([]);
 const hasRest = ref<boolean>(false);
 
-const worker = new Worker(new URL("../worker.ts", import.meta.url), {
-  type: "module",
-});
+const worker = new Worker();
 onMounted(() => {
   init();
 });
 async function init(): Promise<void> {
-  asyncGetStorageValue().then((res) => {
-    let obj = {} as StorageValue;
-    if (res.length === 0) {
-      obj = {
-        tomatoes: DEFAULT_TOMATOES,
-        rests: DEFAULT_RESTS,
-        totalLoops: DEFAULT_LOOPS,
-      };
-      asyncSetStorageValue({
-        ...obj,
-      });
-    } else {
-      obj = JSON.parse(res[0].value);
-    }
-    tomato.value = obj.tomatoes;
-    rest.value = obj.rests;
-    totalLoops.value = obj.totalLoops;
+  asyncGetLocalInputValue().then((res) => {
+    tomato.value = res.tomatoes;
+    rest.value = res.rests;
+    totalLoops.value = res.totalLoops;
+  });
+  asyncGetLocalMusicList().then((res) => {
+    musicList.value = res.musicList;
+    curMusicPath.value = res.curMusicPath;
   });
 }
+
 function start(): void {
   hasRest.value = parseInt(rest.value) !== 0;
   state.value = State.TOMATOE;
   customPostMessage({
     state: MessageState.START,
-    data: { targetTime: parseInt(tomato.value) * SECOND + Date.now() },
+    data: { targetTime: parseInt(tomato.value) * MINUTE + Date.now() },
   });
   worker.onmessage = (e: MessageEvent<MessageData>) => {
     const message = e.data;
@@ -82,12 +69,14 @@ function start(): void {
       return;
     }
     if (mState === MessageState.STOP) {
+      audio.pause();
+      audio.currentTime = 0;
       if (state.value === State.TOMATOE) {
         if (hasRest.value === true) {
           state.value = State.REST;
           customPostMessage({
             state: MessageState.START,
-            data: { targetTime: parseInt(rest.value) * SECOND + Date.now() },
+            data: { targetTime: parseInt(rest.value) * MINUTE + Date.now() },
           });
           notification(NotificationMessage.REST);
         } else if (curLoop.value === parseInt(totalLoops.value)) {
@@ -96,7 +85,7 @@ function start(): void {
         } else {
           customPostMessage({
             state: MessageState.START,
-            data: { targetTime: parseInt(tomato.value) * SECOND + Date.now() },
+            data: { targetTime: parseInt(tomato.value) * MINUTE + Date.now() },
           });
           notification(NotificationMessage.WORK);
           curLoop.value++;
@@ -113,7 +102,7 @@ function start(): void {
           notification(NotificationMessage.WORK);
           customPostMessage({
             state: MessageState.START,
-            data: { targetTime: parseInt(tomato.value) * SECOND + Date.now() },
+            data: { targetTime: parseInt(tomato.value) * MINUTE + Date.now() },
           });
         }
       }
@@ -131,7 +120,7 @@ function playMusic(): void {
   if (curMusicPath.value === "") {
     return;
   }
-  audio.src = curMusicPath.value;
+  audio.src = new URL(curMusicPath.value).toString();
   audio.play();
   audio.onerror = (e) => {
     console.log(`audio get error:`, e);
@@ -139,16 +128,13 @@ function playMusic(): void {
     audio.currentTime = 0;
   };
 }
-function clearMusic() {
-  console.log("do clear");
-}
 async function validateAndStore(): Promise<void> {
   if (
     checkInRange(tomato.value, 1, 9999) &&
     checkInRange(rest.value, 0, 9999) &&
     checkInRange(totalLoops.value, 1, 9999)
   ) {
-    asyncSetStorageValue({
+    asyncSetLocalInputValue({
       tomatoes: tomato.value,
       rests: rest.value,
       totalLoops: totalLoops.value,
@@ -168,10 +154,30 @@ function handleSelectMusic(event: Event) {
   const size = optionList.length;
   const index = optionList.selectedIndex;
   if (index === size - 1) {
-    clearMusic();
-    curMusicPath.value = "";
-    return;
+    window.myIpcRenderer.clearMusicValue().then((res) => {
+      curMusicPath.value = res.curMusicPath;
+      musicList.value = res.musicList;
+    });
   }
+  window.myIpcRenderer.saveMusicValue({
+    curMusicPath: curMusicPath.value,
+    musicList: musicList.value,
+  });
+}
+function handleAddLocalMusic() {
+  window.myIpcRenderer.addLocalMusic().then((value) => {
+    if (value !== null) {
+      if (value.name.length >= 11) {
+        value.name = `...${value.name?.slice(-11)}`;
+      }
+      musicList.value.push(value);
+      curMusicPath.value = value.path;
+      window.myIpcRenderer.saveMusicValue({
+        musicList: toRaw(musicList.value),
+        curMusicPath: "",
+      });
+    }
+  });
 }
 </script>
 
@@ -259,16 +265,16 @@ function handleSelectMusic(event: Event) {
           @update="(value:string)=>{totalLoops = value;validateAndStore()}"
         ></InputItem>
       </div>
-      <div class="flex justify-center grow" >
+      <div class="flex justify-center grow">
         <div>
           <a
             class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
             href="#/"
-            @click="() => {}"
+            @click="handleAddLocalMusic"
             >添加本地音乐</a
           >
         </div>
-        <div class="">
+        <div class="mx-4">
           <select
             v-model="curMusicPath"
             @change="handleSelectMusic"
