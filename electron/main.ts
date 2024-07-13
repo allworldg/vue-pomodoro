@@ -3,10 +3,11 @@ import {
   BrowserWindow,
   dialog,
   ipcMain,
+  nativeImage,
   Notification,
   session,
+  Tray,
 } from "electron";
-import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import {
@@ -22,8 +23,14 @@ import {
   SAVE_MUISC_LIST,
   GET_MUISC_VALUE,
   CLEAR_MUSIC_VALUE,
+  CHANGE_ICON,
 } from "./constants";
 import { LocalMusicValue } from "../types/type";
+import { StateEnum } from "../globalConstants";
+import restIcon from "../public/rest.png?asset";
+import appIcon from "../public/tomato.png?asset";
+import workingIcon from "../public/countdown.png?asset";
+
 const CookieUrl = "http://localhost/pomodoro";
 const EXPIRE_TIME = 365 * 24 * 3600 * 1000;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -102,7 +109,6 @@ function setCookie(cookieName: CookieName, value: string) {
       value: value,
     })
     .catch((e) => {
-      console.log(value);
       console.error(`${cookieName}: set cookie error`);
       console.error(e);
     });
@@ -132,9 +138,10 @@ app.on("activate", () => {
 app.on("before-quit", (_event) => {
   console.log("before-quit");
 });
-
 app.whenReady().then(() => {
   createWindow();
+  // let tray = new Tray(appIcon);
+  let tray = new Tray(path.join(__dirname, "../public/tomato.png"));
   getCookie(CookieName.INPUT_VALUE).then((res) => {
     if (res.length == 0) {
       init();
@@ -187,5 +194,20 @@ app.whenReady().then(() => {
       });
     }
     return null;
+  });
+  ipcMain.on(CHANGE_ICON, (_e, state) => {
+    switch (state) {
+      case StateEnum.WORKING:
+        tray.setImage(nativeImage.createFromDataURL(workingIcon));
+        break;
+      case StateEnum.RESTING:
+        tray.setImage(nativeImage.createFromDataURL(restIcon));
+        break;
+      case StateEnum.END:
+        tray.setImage(nativeImage.createFromDataURL(appIcon));
+        break;
+      default:
+        tray.setImage(nativeImage.createFromDataURL(appIcon));
+    }
   });
 });

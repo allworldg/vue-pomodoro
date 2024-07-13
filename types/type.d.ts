@@ -1,6 +1,7 @@
 import { MessageState, NotificationMessage } from "@/constants";
 import { promises } from "dns";
 import { Ref } from "vue";
+import { StateEnum } from "../globalConstants";
 export interface LocalInputValue {
   tomatoes: string;
   rests: string;
@@ -22,6 +23,7 @@ export interface ImyIpcRenderer {
   clearMusicValue: () => Promise<string>;
   getMusicValue: () => Promise<string>;
   addLocalMusic: () => Promise<string>;
+  changeMainState: (value: StateEnum) => void;
 }
 
 export interface ContextValue {

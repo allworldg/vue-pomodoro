@@ -11,6 +11,7 @@ export const NOTIFICATION = "notification";
 export const ADD_LOCAL_MUISC = "addLocalMusic";
 export const CLEAR_MUSIC_VALUE = "clearMusicValue";
 export const NOTIFICATION_TITLE = "通知";
+export const CHANGE_ICON = "changeIcon";
 
 export const DEFAULT_TOMATOES = "5";
 export const DEFAULT_RESTS = "0";

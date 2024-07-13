@@ -13,7 +13,7 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "preserve",
-    "types": ["vite/client"],
+    "types": ["vite/client", "electron-vite/node"],
 
     /* Linting */
     "strict": true
@@ -26,7 +26,8 @@
     "src/**/*.tsx",
     "src/**/*.vue",
     "electron",
-    "types/type.d.ts"
+    "types/type.d.ts",
+    "globalConstants.ts"
   ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

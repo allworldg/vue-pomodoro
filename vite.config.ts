@@ -2,7 +2,9 @@ import { defineConfig } from "vite";
 import path from "node:path";
 import electron from "vite-plugin-electron/simple";
 import vue from "@vitejs/plugin-vue";
-
+/**
+ * @type {import('electron-vite').UserConfig}
+ */
 // https://vitejs.dev/config/
 export default defineConfig({
   resolve: {
@@ -32,4 +34,7 @@ export default defineConfig({
           : {},
     }),
   ],
+  build:{
+    
+  }
 });

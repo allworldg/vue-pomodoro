@@ -23,9 +23,10 @@ import {
   asyncSetLocalMusicValue,
   clearMusicValue,
 } from "@/utils/localStorage";
-import { checkInRange } from "@/utils/util";
+import { changeMainState, checkInRange } from "@/utils/util";
 import { MessageData, MusicItem } from "@/../types/type";
 import LoopTitle from "@/components/LoopTitle.vue";
+import { StateEnum } from "../../globalConstants";
 const remainSeconds = ref<number>(0);
 const audio = new Audio();
 const tomato = ref<string>(DEFAULT_TOMATOES);
@@ -60,6 +61,7 @@ function start(): void {
     state: MessageState.START,
     data: { targetTime: parseInt(tomato.value) * MINUTE + Date.now() },
   });
+  changeMainState(StateEnum.WORKING);
   worker.onmessage = (e: MessageEvent<MessageData>) => {
     const message = e.data;
     const mState = message.state;
@@ -76,6 +78,7 @@ function start(): void {
       if (state.value === State.TOMATOE) {
         if (hasRest.value === true) {
           state.value = State.REST;
+          changeMainState(StateEnum.RESTING);
           customPostMessage({
             state: MessageState.START,
             data: { targetTime: parseInt(rest.value) * MINUTE + Date.now() },
@@ -84,12 +87,14 @@ function start(): void {
         } else if (curLoop.value === parseInt(totalLoops.value)) {
           notification(NotificationMessage.END);
           stop();
+          changeMainState(StateEnum.END);
         } else {
           customPostMessage({
             state: MessageState.START,
             data: { targetTime: parseInt(tomato.value) * MINUTE + Date.now() },
           });
           notification(NotificationMessage.WORK);
+          changeMainState(StateEnum.WORKING);
           curLoop.value++;
         }
         return;
@@ -98,6 +103,7 @@ function start(): void {
         if (curLoop.value === parseInt(totalLoops.value)) {
           notification(NotificationMessage.END);
           stop();
+          changeMainState(StateEnum.END);
         } else {
           state.value = State.TOMATOE;
           curLoop.value++;
@@ -106,6 +112,7 @@ function start(): void {
             state: MessageState.START,
             data: { targetTime: parseInt(tomato.value) * MINUTE + Date.now() },
           });
+          changeMainState(StateEnum.WORKING);
         }
       }
     }
@@ -225,6 +232,7 @@ function handleAddLocalMusic() {
               () => {
                 customPostMessage({ state: MessageState.STOP, data: {} });
                 stop();
+                changeMainState(StateEnum.END);
               }
             "
           >
