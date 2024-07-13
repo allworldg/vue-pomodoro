@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, onMounted, ref, toRaw, toValue } from "vue";
+import { onMounted, ref } from "vue";
 import Clock from "@/components/Clock.vue";
 import InputItem from "@/components/InputItem.vue";
 import StateTitle from "@/components/StateTitle.vue";
@@ -24,10 +24,7 @@ import {
   clearMusicValue,
 } from "@/utils/localStorage";
 import { checkInRange } from "@/utils/util";
-import {
-  MessageData,
-  MusicItem,
-} from "@/../types/type";
+import { MessageData, MusicItem } from "@/../types/type";
 import LoopTitle from "@/components/LoopTitle.vue";
 const remainSeconds = ref<number>(0);
 const audio = new Audio();

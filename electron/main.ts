@@ -23,11 +23,9 @@ import {
   GET_MUISC_VALUE,
   CLEAR_MUSIC_VALUE,
 } from "./constants";
-import { MusicItem, LocalInputValue, LocalMusicValue } from "../types/type";
+import { LocalMusicValue } from "../types/type";
 const CookieUrl = "http://localhost/pomodoro";
-const NAME = "pomodoro";
 const EXPIRE_TIME = 365 * 24 * 3600 * 1000;
-const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DEFAULT_MUSIC_VALUE: LocalMusicValue = {
   curMusicPath: "",
@@ -35,7 +33,7 @@ const DEFAULT_MUSIC_VALUE: LocalMusicValue = {
     { name: "无", path: "" },
     {
       name: "forest",
-      path: new URL("./public/forest.mp4", import.meta.url).toString(),
+      path: fileURLToPath(new URL("/../public/forest.mp4", import.meta.url)),
     },
   ],
 };
@@ -104,6 +102,7 @@ function setCookie(cookieName: CookieName, value: string) {
       value: value,
     })
     .catch((e) => {
+      console.log(value);
       console.error(`${cookieName}: set cookie error`);
       console.error(e);
     });
