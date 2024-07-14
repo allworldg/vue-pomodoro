@@ -3,6 +3,7 @@ import {
   BrowserWindow,
   dialog,
   ipcMain,
+  Menu,
   nativeImage,
   Notification,
   session,
@@ -23,7 +24,7 @@ import {
   SAVE_MUISC_LIST,
   GET_MUISC_VALUE,
   CLEAR_MUSIC_VALUE,
-  CHANGE_ICON,
+  CHANGE_STATE,
 } from "./constants";
 import { LocalMusicValue } from "../types/type";
 import { StateEnum } from "../globalConstants";
@@ -65,6 +66,23 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL
   : RENDERER_DIST;
 
 let win: BrowserWindow | null;
+let isRunning = false;
+const getTheLock = app.requestSingleInstanceLock({ myKey: "myKey" });
+if (!getTheLock) {
+  app.quit();
+} else {
+  app.on(
+    "second-instance",
+    (_event, _commandLine, _workingDirectory, _additionalData) => {
+      // Someone tried to run a second instance, we should focus our window.
+      if (win) {
+        // if (win.isMinimized()) win.restore()
+        win.show();
+        win.focus();
+      }
+    }
+  );
+}
 
 function createWindow() {
   win = new BrowserWindow({
@@ -86,6 +104,12 @@ function createWindow() {
     // win.loadFile('dist/index.html')
     win.loadFile(path.join(RENDERER_DIST, "index.html"));
   }
+  win.on("close", (e) => {
+    if (isRunning) {
+      e.preventDefault();
+      win?.hide();
+    }
+  });
 }
 
 function init() {
@@ -140,8 +164,19 @@ app.on("before-quit", (_event) => {
 });
 app.whenReady().then(() => {
   createWindow();
-  // let tray = new Tray(appIcon);
-  let tray = new Tray(path.join(__dirname, "../public/tomato.png"));
+  let tray = new Tray(nativeImage.createFromDataURL(appIcon));
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: "退出",
+      click: () => {
+        app.quit();
+      },
+    },
+  ]);
+  tray.setContextMenu(contextMenu);
+  tray.on("click", () => {
+    win?.show();
+  });
   getCookie(CookieName.INPUT_VALUE).then((res) => {
     if (res.length == 0) {
       init();
@@ -195,15 +230,17 @@ app.whenReady().then(() => {
     }
     return null;
   });
-  ipcMain.on(CHANGE_ICON, (_e, state) => {
+  ipcMain.on(CHANGE_STATE, (_e, state) => {
     switch (state) {
       case StateEnum.WORKING:
+        isRunning = true;
         tray.setImage(nativeImage.createFromDataURL(workingIcon));
         break;
       case StateEnum.RESTING:
         tray.setImage(nativeImage.createFromDataURL(restIcon));
         break;
       case StateEnum.END:
+        isRunning = false;
         tray.setImage(nativeImage.createFromDataURL(appIcon));
         break;
       default:

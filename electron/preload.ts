@@ -3,7 +3,7 @@ import { LocalMusicValue } from "./../types/type.d";
 import { ipcRenderer, contextBridge, ipcMain } from "electron";
 import {
   ADD_LOCAL_MUISC,
-  CHANGE_ICON,
+  CHANGE_STATE,
   CLEAR_MUSIC_VALUE,
   GET_INPUT_VALUE,
   GET_MUISC_VALUE,
@@ -36,7 +36,7 @@ const myIpcRenderer: ImyIpcRenderer = {
     return ipcRenderer.invoke(CLEAR_MUSIC_VALUE);
   },
   changeMainState(value: StateEnum) {
-    ipcRenderer.send(CHANGE_ICON, value);
+    ipcRenderer.send(CHANGE_STATE, value);
   },
 };
 // --------- Expose some API to the Renderer process ---------
