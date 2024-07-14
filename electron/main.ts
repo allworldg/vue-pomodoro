@@ -159,9 +159,7 @@ app.on("activate", () => {
     createWindow();
   }
 });
-app.on("before-quit", (_event) => {
-  console.log("before-quit");
-});
+
 app.whenReady().then(() => {
   createWindow();
   let tray = new Tray(nativeImage.createFromDataURL(appIcon));
@@ -169,6 +167,7 @@ app.whenReady().then(() => {
     {
       label: "退出",
       click: () => {
+        isRunning = false;
         app.quit();
       },
     },
