@@ -31,7 +31,6 @@ import { StateEnum } from "../globalConstants";
 import restIcon from "../public/rest.png?asset";
 import appIcon from "../public/tomato.png?asset";
 import workingIcon from "../public/countdown.png?asset";
-
 const CookieUrl = "http://localhost/pomodoro";
 const EXPIRE_TIME = 365 * 24 * 3600 * 1000;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -41,7 +40,7 @@ const DEFAULT_MUSIC_VALUE: LocalMusicValue = {
     { name: "无", path: "" },
     {
       name: "forest",
-      path: fileURLToPath(new URL("/../public/forest.mp4", import.meta.url)),
+      path: "/forest.mp4",
     },
   ],
 };
@@ -86,7 +85,10 @@ if (!getTheLock) {
 
 function createWindow() {
   win = new BrowserWindow({
-    icon: path.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
+    width: 600,
+    height: 400,
+    title: "pomodoro",
+    icon: nativeImage.createFromDataURL(appIcon),
     webPreferences: {
       preload: path.join(__dirname, "preload.mjs"),
       webSecurity: false,
@@ -163,6 +165,7 @@ app.on("activate", () => {
 app.whenReady().then(() => {
   createWindow();
   let tray = new Tray(nativeImage.createFromDataURL(appIcon));
+  tray.setToolTip("pomodoro");
   const contextMenu = Menu.buildFromTemplate([
     {
       label: "退出",

@@ -32,7 +32,7 @@ function countDown(targetTime: number) {
     });
     timeId = setTimeout(() => {
       countDown(targetTime);
-    }, 100);
+    }, 200);
   } else {
     customPostMessage({
       state: MessageState.STOP,
