@@ -31,19 +31,6 @@ import { StateEnum } from "../globalConstants";
 import restIcon from "../public/rest.png?asset";
 import appIcon from "../public/tomato.png?asset";
 import workingIcon from "../public/countdown.png?asset";
-const CookieUrl = "http://localhost/pomodoro";
-const EXPIRE_TIME = 365 * 24 * 3600 * 1000;
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DEFAULT_MUSIC_VALUE: LocalMusicValue = {
-  curMusicPath: "",
-  musicList: [
-    { name: "无", path: "" },
-    {
-      name: "forest",
-      path: "/forest.mp4",
-    },
-  ],
-};
 // The built directory structure
 //
 // ├─┬─┬ dist
@@ -53,6 +40,8 @@ const DEFAULT_MUSIC_VALUE: LocalMusicValue = {
 // │ │ ├── main.js
 // │ │ └── preload.mjs
 // │
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 process.env.APP_ROOT = path.join(__dirname, "..");
 
 // 🚧 Use ['ENV_NAME'] avoid vite:define plugin - Vite@2.x
@@ -63,6 +52,23 @@ export const RENDERER_DIST = path.join(process.env.APP_ROOT, "dist");
 process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL
   ? path.join(process.env.APP_ROOT, "public")
   : RENDERER_DIST;
+
+const CookieUrl = "http://localhost/pomodoro";
+const EXPIRE_TIME = 365 * 24 * 3600 * 1000;
+const DEFAULT_MUSIC_VALUE: LocalMusicValue = {
+  curMusicPath: "",
+  musicList: [
+    { name: "无", path: "" },
+    {
+      name: "forest",
+      path:
+        VITE_DEV_SERVER_URL == null
+          ? "/forest.mp4"
+          : path.join(__dirname, "../public/forest.mp4"),
+    },
+  ],
+};
+console.log(DEFAULT_MUSIC_VALUE.musicList[1].path)
 
 let win: BrowserWindow | null;
 let isRunning = false;

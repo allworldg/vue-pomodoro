@@ -129,7 +129,7 @@ function playMusic(): void {
   if (curMusicPath.value === "") {
     return;
   }
-  audio.src = new URL(curMusicPath.value).toString();
+  audio.src = curMusicPath.value;
   audio.play();
   audio.onerror = (e) => {
     console.log(`audio get error:`, e);

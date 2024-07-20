@@ -12,6 +12,23 @@
     "build": "vue-tsc && vite build && electron-builder",
     "preview": "vite preview"
   },
+  "build": {
+    "appId": "pomodoro",
+    "productName": "pomodoro",
+    "win": {
+      "target": "nsis",
+      "icon": "build/tomato-256.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*"
+    ]
+  },
   "dependencies": {
     "vue": "^3.4.21"
   },

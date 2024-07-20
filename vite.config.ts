@@ -34,7 +34,5 @@ export default defineConfig({
           : {},
     }),
   ],
-  build:{
-    
-  }
+  build: {},
 });
