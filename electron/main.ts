@@ -62,13 +62,12 @@ const DEFAULT_MUSIC_VALUE: LocalMusicValue = {
     {
       name: "forest",
       path:
-        VITE_DEV_SERVER_URL == null
+        VITE_DEV_SERVER_URL != null
           ? "/forest.mp4"
-          : path.join(__dirname, "../public/forest.mp4"),
+          : path.join(__dirname, "../dist/forest.mp4"),
     },
   ],
 };
-console.log(DEFAULT_MUSIC_VALUE.musicList[1].path)
 
 let win: BrowserWindow | null;
 let isRunning = false;
@@ -189,6 +188,9 @@ app.whenReady().then(() => {
     if (res.length == 0) {
       init();
     }
+  });
+  ipcMain.handle("test", () => {
+    return (VITE_DEV_SERVER_URL == null) + "";
   });
   ipcMain.on(SAVE_INPUT_VALUE, (_event, cookie) => {
     setCookie(CookieName.INPUT_VALUE, cookie);
