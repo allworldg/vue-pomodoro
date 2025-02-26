@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import Clock from "@/components/Clock.vue";
 import InputItem from "@/components/InputItem.vue";
 import StateTitle from "@/components/StateTitle.vue";
@@ -14,6 +14,9 @@ import {
   DEFAULT_CURRENT_LOOP,
   SECOND,
   NotificationMessage,
+  DEFAULT_TODAYTOMATO,
+  DEFAULT_TODAY_FOCUSTIME,
+  DEFAULT_TOTAL_TIME,
 } from "@/constants";
 import {
   asyncAddLocalMusicValue,
@@ -23,7 +26,7 @@ import {
   asyncSetLocalMusicValue,
   clearMusicValue,
 } from "@/utils/localStorage";
-import { changeMainState, checkInRange } from "@/utils/util";
+import { changeMainState, checkInRange, formatTimeStr } from "@/utils/util";
 import { MessageData, MusicItem } from "@/../types/type";
 import LoopTitle from "@/components/LoopTitle.vue";
 import { StateEnum } from "../../globalConstants";
@@ -37,6 +40,11 @@ const curLoop = ref<number>(DEFAULT_CURRENT_LOOP);
 const curMusicPath = ref<string>("");
 const musicList = ref<Array<MusicItem>>([]);
 const hasRest = ref<boolean>(false);
+const todayTomato = ref<number>(DEFAULT_TODAYTOMATO);
+const todayFocusTime = ref<number>(DEFAULT_TODAY_FOCUSTIME);
+const todayFocusTimeStr = computed(() => formatTimeStr(todayFocusTime.value));
+const totalTime = ref<number>(DEFAULT_TOTAL_TIME);
+const totalTimeStr = computed(() => formatTimeStr(totalTime.value));
 
 const worker = new Worker();
 onMounted(() => {
@@ -192,7 +200,7 @@ function handleAddLocalMusic() {
 
 <template>
   <div class="flex flex-col h-screen">
-    <div class="flex flex-1 flex-col justify-center">
+    <section class="flex flex-1 flex-col justify-center">
       <Clock :remain-seconds="remainSeconds"></Clock>
       <StateTitle
         v-show="state !== State.STOP"
@@ -250,9 +258,9 @@ function handleAddLocalMusic() {
         </div>
         <div class="flex-1"></div>
       </div>
-    </div>
-    <div class="flex flex-1 flex-col">
-      <div class="flex-1 flex justify-center flex-wrap">
+    </section>
+    <section class="flex flex-1 flex-col">
+      <section class="flex-1 flex justify-center flex-wrap">
         <InputItem
           class="mx-2"
           title="番茄"
@@ -274,8 +282,9 @@ function handleAddLocalMusic() {
           :value="totalLoops"
           @update="(value:string)=>{totalLoops = value;validateAndStore()}"
         ></InputItem>
-      </div>
-      <div class="flex justify-center grow">
+      </section>
+
+      <section class="flex flex-1 justify-center">
         <div>
           <a
             class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
@@ -300,8 +309,28 @@ function handleAddLocalMusic() {
             <option value="clear">清除音乐</option>
           </select>
         </div>
-      </div>
-    </div>
+      </section>
+      <section class="flex flex-1 flex-col">
+        <div class="flex flex-1">
+          <div class="mx-10">
+            <span>当日专注次数：</span>
+            <span>{{ todayTomato }}</span>
+          </div>
+          <div>
+            <span>时长：</span>
+            <span>{{ todayFocusTimeStr }}</span>
+          </div>
+        </div>
+        <div class="flex flex-1">
+          <section class="flex">
+            <div class="mx-10">
+              <span>总时长：</span>
+              <span>{{ totalTimeStr }}</span>
+            </div>
+          </section>
+        </div>
+      </section>
+    </section>
   </div>
 </template>
 
