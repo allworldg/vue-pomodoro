@@ -1,6 +1,6 @@
 import { StateEnum } from "./../globalConstants";
 import { LocalMusicValue } from "./../types/type.d";
-import { ipcRenderer, contextBridge, ipcMain } from "electron";
+import { ipcRenderer, contextBridge } from "electron";
 import {
   ADD_LOCAL_MUISC,
   CHANGE_STATE,
@@ -11,9 +11,8 @@ import {
   SAVE_INPUT_VALUE,
   SAVE_MUISC_LIST,
 } from "./constants";
-import { ImyIpcRenderer, LocalInputValue } from "../types/type";
 
-const myIpcRenderer: ImyIpcRenderer = {
+const myIpcRenderer = {
   saveInputValue(value: string) {
     return ipcRenderer.send(SAVE_INPUT_VALUE, value);
   },
@@ -41,3 +40,4 @@ const myIpcRenderer: ImyIpcRenderer = {
 };
 // --------- Expose some API to the Renderer process ---------
 contextBridge.exposeInMainWorld("myIpcRenderer", myIpcRenderer);
+export { myIpcRenderer };

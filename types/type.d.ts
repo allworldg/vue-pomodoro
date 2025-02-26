@@ -43,6 +43,6 @@ export interface MessageData {
 
 declare global {
   interface Window {
-    myIpcRenderer: ImyIpcRenderer;
+    myIpcRenderer: typeof import("@/../electron/preload")["myIpcRenderer"];
   }
 }
