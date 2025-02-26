@@ -68,10 +68,12 @@ const DEFAULT_MUSIC_VALUE: LocalMusicValue = {
     },
   ],
 };
+const isDev = process.env.NODE_ENV === "development";
+app.name = isDev ? "pomodoro-dev" : "pomodoro";
 
 let win: BrowserWindow | null;
 let isRunning = false;
-const getTheLock = app.requestSingleInstanceLock({ myKey: "myKey" });
+const getTheLock = app.requestSingleInstanceLock();
 if (!getTheLock) {
   app.quit();
 } else {
