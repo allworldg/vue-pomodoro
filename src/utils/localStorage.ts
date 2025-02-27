@@ -1,4 +1,9 @@
-import { LocalInputValue, LocalMusicValue, MusicItem } from "../../types/type";
+import {
+  FocusRecordData,
+  LocalInputValue,
+  LocalMusicValue,
+  MusicItem,
+} from "../../types/type";
 
 export async function asyncGetLocalInputValue(): Promise<LocalInputValue> {
   return window.myIpcRenderer.getInputValue().then((value) => {
@@ -35,4 +40,12 @@ export async function asyncAddLocalMusicValue(): Promise<MusicItem> {
   return window.myIpcRenderer
     .addLocalMusic()
     .then((value) => JSON.parse(value));
+}
+
+export async function saveRecordTime(focusTime: number) {
+  window.myIpcRenderer.saveFocusRecord(focusTime);
+}
+
+export async function asyncGetFocusRecord(): Promise<FocusRecordData> {
+  return window.myIpcRenderer.getFocusRecord();
 }

@@ -24,14 +24,15 @@ export const DEFAULT_RESTS = "0";
 export const DEFAULT_LOOPS = "1";
 export const STARTED = true;
 export const DEFAULT_CURRENT_LOOP = 1;
-export const DEFAULT_TODAYTOMATO = 0;
+export const DEFAULT_TODAY_FOCUSTIMES = 0;
 export const DEFAULT_TODAY_FOCUSTIME = 0;
-export const DEFAULT_TOTAL_TIME = 0;
+export const DEFAULT_TOTAL_TIME_RECORD = 0;
 export const WORKING = "正在专注";
 export const RESTING = "正在休息";
 
 export const SECOND = 1000;
 export const MINUTE = 60 * SECOND;
+export const HOUR = 60 * MINUTE;
 
 export const NOTIFICATION_BODY_START_WORK = "开始专注";
 export const NOTIFICATION_BODY_START_REST = "开始休息";

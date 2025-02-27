@@ -5,6 +5,10 @@ export enum CookieName {
 
 export const SAVE_INPUT_VALUE = "saveInputValue";
 export const SAVE_MUISC_LIST = "saveMuiscList";
+export const SAVE_FOCUS_RECORD = "saveFocusRecord";
+export const GET_FOCUS_RECORD = "getFocusRecord";
+export const FOCUS_RECORD = "focusRecord";
+
 export const GET_INPUT_VALUE = "getInputValue";
 export const GET_MUISC_VALUE = "getMusicValue";
 export const NOTIFICATION = "notification";

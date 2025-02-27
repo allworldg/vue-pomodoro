@@ -1,3 +1,4 @@
+import { HOUR, MINUTE } from "@/constants";
 import { StateEnum } from "../../globalConstants";
 
 export function checkInRange(value: string, min: number, max: number): boolean {
@@ -14,8 +15,8 @@ export function getFormattedToday() {
 }
 
 export const formatTimeStr = (time: number): string => {
-  const hours = Math.trunc(time / 3600);
-  const minutes = Math.trunc((time % 3600) / 60);
+  const hours = Math.trunc(time / HOUR);
+  const minutes = Math.trunc((time % HOUR) / MINUTE);
   return `${hours > 0 ? hours + "小时" : ""}${minutes + "分钟"}`;
 };
 

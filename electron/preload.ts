@@ -1,13 +1,15 @@
 import { StateEnum } from "./../globalConstants";
-import { LocalMusicValue } from "./../types/type.d";
+import { FocusRecordData, LocalMusicValue } from "./../types/type.d";
 import { ipcRenderer, contextBridge } from "electron";
 import {
   ADD_LOCAL_MUISC,
   CHANGE_STATE,
   CLEAR_MUSIC_VALUE,
+  GET_FOCUS_RECORD,
   GET_INPUT_VALUE,
   GET_MUISC_VALUE,
   NOTIFICATION,
+  SAVE_FOCUS_RECORD,
   SAVE_INPUT_VALUE,
   SAVE_MUISC_LIST,
 } from "./constants";
@@ -36,6 +38,12 @@ const myIpcRenderer = {
   },
   changeMainState(value: StateEnum) {
     ipcRenderer.send(CHANGE_STATE, value);
+  },
+  saveFocusRecord(focusTime: number) {
+    ipcRenderer.send(SAVE_FOCUS_RECORD, focusTime);
+  },
+  getFocusRecord() {
+    return ipcRenderer.invoke(GET_FOCUS_RECORD);
   },
 };
 // --------- Expose some API to the Renderer process ---------

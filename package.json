@@ -5,10 +5,10 @@
     "name": "allworldg"
   },
   "private": true,
-  "version": "0.0.1",
+  "version": "0.0.2",
   "type": "module",
   "scripts": {
-    "dev": "cross-env NODE_ENV=development vite",
+    "dev": "vite",
     "build": "vue-tsc && vite build && electron-builder",
     "preview": "vite preview"
   },
@@ -31,6 +31,7 @@
   },
   "dependencies": {
     "cross-env": "^7.0.3",
+    "electron-store": "^10.0.1",
     "vue": "^3.4.21"
   },
   "devDependencies": {

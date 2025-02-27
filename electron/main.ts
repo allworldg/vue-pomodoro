@@ -25,12 +25,17 @@ import {
   GET_MUISC_VALUE,
   CLEAR_MUSIC_VALUE,
   CHANGE_STATE,
+  SAVE_FOCUS_RECORD,
+  FOCUS_RECORD,
+  GET_FOCUS_RECORD,
 } from "./constants";
-import { LocalMusicValue } from "../types/type";
+import { FocusRecordData, LocalMusicValue } from "../types/type";
 import { StateEnum } from "../globalConstants";
 import restIcon from "../public/rest.png?asset";
 import appIcon from "../public/tomato.png?asset";
 import workingIcon from "../public/countdown.png?asset";
+import Store from "electron-store";
+import { isNull } from "node:util";
 // The built directory structure
 //
 // ├─┬─┬ dist
@@ -53,6 +58,7 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL
   ? path.join(process.env.APP_ROOT, "public")
   : RENDERER_DIST;
 
+const store = new Store();
 const CookieUrl = "http://localhost/pomodoro";
 const EXPIRE_TIME = 365 * 24 * 3600 * 1000;
 const DEFAULT_MUSIC_VALUE: LocalMusicValue = {
@@ -68,8 +74,6 @@ const DEFAULT_MUSIC_VALUE: LocalMusicValue = {
     },
   ],
 };
-const isDev = process.env.NODE_ENV === "development";
-app.name = isDev ? "pomodoro-dev" : "pomodoro";
 
 let win: BrowserWindow | null;
 let isRunning = false;
@@ -169,7 +173,6 @@ app.on("activate", () => {
     createWindow();
   }
 });
-
 app.whenReady().then(() => {
   createWindow();
   let tray = new Tray(nativeImage.createFromDataURL(appIcon));
@@ -201,6 +204,50 @@ app.whenReady().then(() => {
   ipcMain.on(SAVE_MUISC_LIST, (_event, cookie) => {
     setCookie(CookieName.MUISC_VALUE, cookie);
   });
+  ipcMain.on(SAVE_FOCUS_RECORD, (_event, focusTime: number) => {
+    let record = store.get(FOCUS_RECORD) as FocusRecordData;
+    let today = new Date().setHours(0, 0, 0, 0);
+    if (today != record.todayFocus.date) {
+      record = {
+        todayFocus: {
+          date: today,
+          todayFocusTime: focusTime,
+          todayFocusTimes: 1,
+        },
+        totalFocusTime: record.totalFocusTime + focusTime,
+      };
+    } else {
+      record.todayFocus.todayFocusTime += focusTime;
+      record.todayFocus.todayFocusTimes += 1;
+      record.totalFocusTime += focusTime;
+    }
+    store.set(FOCUS_RECORD, record);
+  });
+  ipcMain.handle(GET_FOCUS_RECORD, async () => {
+    let record = store.get(FOCUS_RECORD) as FocusRecordData;
+    if (record == null) {
+      record = {
+        todayFocus: {
+          date: new Date().setHours(0, 0, 0, 0),
+          todayFocusTime: 0,
+          todayFocusTimes: 0,
+        },
+        totalFocusTime: 0,
+      };
+      store.set(FOCUS_RECORD, record);
+    } else {
+      let today = new Date().setHours(0, 0, 0, 0);
+      if (today != record.todayFocus.date) {
+        record.todayFocus = {
+          date: today,
+          todayFocusTime: 0,
+          todayFocusTimes: 0,
+        };
+      }
+    }
+    return record;
+  });
+
   ipcMain.handle(GET_MUISC_VALUE, async () => {
     let cookie = await getCookie(CookieName.MUISC_VALUE);
     if (cookie.length == 0) {

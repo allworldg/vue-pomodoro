@@ -14,17 +14,19 @@ import {
   DEFAULT_CURRENT_LOOP,
   SECOND,
   NotificationMessage,
-  DEFAULT_TODAYTOMATO,
+  DEFAULT_TODAY_FOCUSTIMES,
   DEFAULT_TODAY_FOCUSTIME,
-  DEFAULT_TOTAL_TIME,
+  DEFAULT_TOTAL_TIME_RECORD,
 } from "@/constants";
 import {
   asyncAddLocalMusicValue,
+  asyncGetFocusRecord,
   asyncGetLocalInputValue,
   asyncGetLocalMusicValue,
   asyncSetLocalInputValue,
   asyncSetLocalMusicValue,
   clearMusicValue,
+  saveRecordTime,
 } from "@/utils/localStorage";
 import { changeMainState, checkInRange, formatTimeStr } from "@/utils/util";
 import { MessageData, MusicItem } from "@/../types/type";
@@ -40,11 +42,11 @@ const curLoop = ref<number>(DEFAULT_CURRENT_LOOP);
 const curMusicPath = ref<string>("");
 const musicList = ref<Array<MusicItem>>([]);
 const hasRest = ref<boolean>(false);
-const todayTomato = ref<number>(DEFAULT_TODAYTOMATO);
+const todayFocusTimes = ref<number>(DEFAULT_TODAY_FOCUSTIMES);
 const todayFocusTime = ref<number>(DEFAULT_TODAY_FOCUSTIME);
 const todayFocusTimeStr = computed(() => formatTimeStr(todayFocusTime.value));
-const totalTime = ref<number>(DEFAULT_TOTAL_TIME);
-const totalTimeStr = computed(() => formatTimeStr(totalTime.value));
+const totalTimeRecord = ref<number>(DEFAULT_TOTAL_TIME_RECORD);
+const totalTimeStr = computed(() => formatTimeStr(totalTimeRecord.value));
 
 const worker = new Worker();
 onMounted(() => {
@@ -59,6 +61,11 @@ async function init(): Promise<void> {
   asyncGetLocalMusicValue().then((res) => {
     musicList.value = res.musicList;
     curMusicPath.value = res.curMusicPath;
+  });
+  asyncGetFocusRecord().then((res) => {
+    todayFocusTime.value = res.todayFocus.todayFocusTime;
+    todayFocusTimes.value = res.todayFocus.todayFocusTimes;
+    totalTimeRecord.value = res.totalFocusTime;
   });
 }
 
@@ -84,6 +91,15 @@ function start(): void {
       audio.pause();
       audio.currentTime = 0;
       if (state.value === State.TOMATOE) {
+        let focusTime = parseInt(tomato.value) * MINUTE;
+        saveRecordTime(focusTime).then(() => {
+          asyncGetFocusRecord().then((res) => {
+            todayFocusTime.value = res.todayFocus.todayFocusTime;
+            todayFocusTimes.value = res.todayFocus.todayFocusTimes;
+            totalTimeRecord.value = res.totalFocusTime;
+          });
+        });
+
         if (hasRest.value === true) {
           state.value = State.REST;
           changeMainState(StateEnum.RESTING);
@@ -314,7 +330,7 @@ function handleAddLocalMusic() {
         <div class="flex flex-1">
           <div class="mx-10">
             <span>当日专注次数：</span>
-            <span>{{ todayTomato }}</span>
+            <span>{{ todayFocusTimes }}</span>
           </div>
           <div>
             <span>时长：</span>

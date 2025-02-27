@@ -7,6 +7,14 @@ export interface LocalInputValue {
   rests: string;
   totalLoops: string;
 }
+export interface FocusRecordData {
+  todayFocus: {
+    date: number;
+    todayFocusTime: number;
+    todayFocusTimes: number;
+  };
+  totalFocusTime: number;
+}
 export interface MusicItem {
   name: string;
   path: string;
